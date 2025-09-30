@@ -1,0 +1,322 @@
+package Assignment_II;
+import java.util.*;
+public class TourPackage {
+    private int packageId;
+    private String name;
+    private double price;
+    private int availableSeats;
+    private List<ItineraryItem> itineraryItems = new ArrayList<>();
+    public TourPackage(int packageId, String name, double price, int availableSeats) {
+        this.packageId = packageId;
+        this.name = name;
+        this.price = price;
+        this.availableSeats = availableSeats;
+    }
+    public void addItinerary(ItineraryItem item) {
+        itineraryItems.add(item);
+    }
+    public boolean bookSeat(int count) {
+        if (availableSeats >= count) {
+            availableSeats -= count;
+            return true;
+        }
+        return false;
+    }
+    public void cancelSeat(int count) {
+        availableSeats += count;
+    }
+    public int getPackageId() { return packageId; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public int getAvailableSeats() { return availableSeats; }
+    public void displayPackage() {
+        System.out.println("Package ID: " + packageId + " | " + name +
+                " | Price: " + price + " | Seats: " + availableSeats);
+        for (ItineraryItem item : itineraryItems) {
+            System.out.println("   - " + item.getDetails());
+        }
+    }
+}
+public class ItineraryItem {
+    private int itemId;
+    private String description;
+    private String date;
+
+    public ItineraryItem(int itemId, String description, String date) {
+        this.itemId = itemId;
+        this.description = description;
+        this.date = date;
+    }
+
+    public String getDetails() {
+        return description + " on " + date;
+    }
+}
+public class Customer {
+    private int customerId;
+    private String name;
+    private String email;
+    public Customer(int customerId, String name, String email) {
+        this.customerId = customerId;
+        this.name = name;
+        this.email = email;
+    }
+    public int getCustomerId() { return customerId; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+}
+import java.util.*;
+public class Booking {
+    private int bookingId;
+    private Customer customer;
+    private TourPackage tourPackage;
+    private List<Traveler> travelers = new ArrayList<>();
+    private boolean confirmed;
+    public Booking(int bookingId, Customer customer, TourPackage tourPackage) {
+        this.bookingId = bookingId;
+        this.customer = customer;
+        this.tourPackage = tourPackage;
+    }
+    public void addTraveler(Traveler t) {
+        travelers.add(t);
+    }
+    public boolean confirmBooking() {
+        if (tourPackage.bookSeat(travelers.size())) {
+            confirmed = true;
+            System.out.println("Booking Confirmed for " + customer.getName());
+            System.out.println("Travelers:");
+            for (Traveler t : travelers) {
+                System.out.println("   - " + t);
+            }
+            return true;
+        } else {
+            System.out.println("Not enough seats available!");
+            return false;
+        }
+    }
+    public void cancelBooking() {
+        if (confirmed) {
+            tourPackage.cancelSeat(travelers.size());
+            confirmed = false;
+        }
+    }
+    public int getBookingId() { return bookingId; }
+    public Customer getCustomer() { return customer; }
+    public TourPackage getTourPackage() { return tourPackage; }
+    public List<Traveler> getTravelers() { return travelers; }
+    public boolean isConfirmed() { return confirmed; }
+}
+public class Traveler {
+    private int travelerId;
+    private String travelerName;
+    private int age;
+    public Traveler(int travelerId, String travelerName, int age) {
+        this.travelerId = travelerId;
+        this.travelerName = travelerName;
+        this.age = age;
+    }
+    @Override
+    public String toString() {
+        return travelerName + " (Age: " + age + ")";
+    }
+}
+public class Payment {
+    private int paymentId;
+    private double amount;
+    private Booking booking;
+    private boolean paid;
+
+    public Payment(int paymentId, double amount, Booking booking) {
+        this.paymentId = paymentId;
+        this.amount = amount;
+        this.booking = booking;
+    }
+
+    public void processPayment() {
+        this.paid = true;
+        System.out.println("Payment of " + amount + " completed for Booking " + booking.getBookingId());
+    }
+
+    public boolean isPaid() { return paid; }
+}
+public class Cancellation {
+    private int cancellationId;
+    private Booking booking;
+    private String reason;
+    private double fee;
+
+    public Cancellation(int cancellationId, Booking booking, String reason, double fee) {
+        this.cancellationId = cancellationId;
+        this.booking = booking;
+        this.reason = reason;
+        this.fee = fee;
+    }
+
+    public void cancelBooking() {
+        booking.cancelBooking();
+        double refund = booking.getTourPackage().getPrice() * booking.getTravelers().size() - fee;
+        System.out.println("Booking " + booking.getBookingId() +
+                " cancelled. Fee: " + fee + ", Refund: " + refund);
+    }
+}
+import java.util.*;
+public class TravelAgencyApp {
+    private static Scanner sc = new Scanner(System.in);
+    private static List<TourPackage> packages = new ArrayList<>();
+    private static List<Customer> customers = new ArrayList<>();
+    private static List<Booking> bookings = new ArrayList<>();
+
+    public static void main(String[] args) {
+        int choice;
+        do {
+            System.out.println("\n--- Travel Agency Menu ---");
+            System.out.println("1. Add Tour Package");
+            System.out.println("2. Add Itinerary Item");
+            System.out.println("3. Add Customer");
+            System.out.println("4. Create Booking");
+            System.out.println("5. Record Payment");
+            System.out.println("6. Cancel Booking");
+            System.out.println("7. Display Packages & Availability");
+            System.out.println("8. Exit");
+            System.out.print("Enter choice: ");
+            while (!sc.hasNextInt()) {
+                System.out.println("Invalid input! Enter a number.");
+                sc.next();
+            }
+            choice = sc.nextInt();
+
+            switch (choice) {
+                case 1: addTourPackage(); break;
+                case 2: addItineraryItem(); break;
+                case 3: addCustomer(); break;
+                case 4: createBooking(); break;
+                case 5: recordPayment(); break;
+                case 6: cancelBooking(); break;
+                case 7: displayPackages(); break;
+                case 8: System.out.println("Exiting..."); break;
+                default: System.out.println("Invalid choice!");
+            }
+        } while (choice != 8);
+    }
+
+    private static void addTourPackage() {
+        System.out.print("Enter Package ID: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter Package Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter Price: ");
+        double price = sc.nextDouble();
+        System.out.print("Enter Seats: ");
+        int seats = sc.nextInt();
+        packages.add(new TourPackage(id, name, price, seats));
+        System.out.println("Tour Package Added!");
+    }
+
+    private static void addItineraryItem() {
+        System.out.print("Enter Package ID: ");
+        int pid = sc.nextInt();
+        sc.nextLine();
+        TourPackage tp = findPackage(pid);
+        if (tp == null) {
+            System.out.println("Package not found!");
+            return;
+        }
+        System.out.print("Enter Item ID: ");
+        int iid = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter Description: ");
+        String desc = sc.nextLine();
+        System.out.print("Enter Date: ");
+        String date = sc.nextLine();
+        tp.addItinerary(new ItineraryItem(iid, desc, date));
+        System.out.println("Itinerary Added!");
+    }
+
+    private static void addCustomer() {
+        System.out.print("Enter Customer ID: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter Email: ");
+        String email = sc.nextLine();
+        customers.add(new Customer(id, name, email));
+        System.out.println("Customer Added!");
+    }
+
+    private static void createBooking() {
+        System.out.print("Enter Booking ID: ");
+        int bid = sc.nextInt();
+        System.out.print("Enter Customer ID: ");
+        int cid = sc.nextInt();
+        Customer c = findCustomer(cid);
+        if (c == null) { System.out.println("Customer not found!"); return; }
+        System.out.print("Enter Package ID: ");
+        int pid = sc.nextInt();
+        TourPackage tp = findPackage(pid);
+        if (tp == null) { System.out.println("Package not found!"); return; }
+
+        Booking b = new Booking(bid, c, tp);
+
+        System.out.print("Enter number of travelers: ");
+        int n = sc.nextInt();
+        sc.nextLine();
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter Traveler ID: ");
+            int tid = sc.nextInt();
+            sc.nextLine();
+            System.out.print("Enter Traveler Name: ");
+            String tname = sc.nextLine();
+            System.out.print("Enter Age: ");
+            int age = sc.nextInt();
+            sc.nextLine();
+            b.addTraveler(new Traveler(tid, tname, age));
+        }
+
+        if (b.confirmBooking()) {
+            bookings.add(b);
+        }
+    }
+    private static void recordPayment() {
+        System.out.print("Enter Booking ID: ");
+        int bid = sc.nextInt();
+        Booking b = findBooking(bid);
+        if (b == null) { System.out.println("Booking not found!"); return; }
+        double amount = b.getTourPackage().getPrice() * b.getTravelers().size();
+        Payment p = new Payment(new Random().nextInt(10000), amount, b);
+        p.processPayment();
+    }
+    private static void cancelBooking() {
+        System.out.print("Enter Booking ID: ");
+        int bid = sc.nextInt();
+        Booking b = findBooking(bid);
+        if (b == null) { System.out.println("Booking not found!"); return; }
+        sc.nextLine();
+        System.out.print("Enter Reason: ");
+        String reason = sc.nextLine();
+        Cancellation c = new Cancellation(new Random().nextInt(10000), b, reason, 500); // flat fee
+        c.cancelBooking();
+    }
+
+    private static void displayPackages() {
+        for (TourPackage tp : packages) {
+            tp.displayPackage();
+        }
+    }
+
+    private static TourPackage findPackage(int id) {
+        for (TourPackage tp : packages) if (tp.getPackageId() == id) return tp;
+        return null;
+    }
+
+    private static Customer findCustomer(int id) {
+        for (Customer c : customers) if (c.getCustomerId() == id) return c;
+        return null;
+    }
+
+    private static Booking findBooking(int id) {
+        for (Booking b : bookings) if (b.getBookingId() == id) return b;
+        return null;
+    }
+}
